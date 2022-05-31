@@ -1,0 +1,589 @@
+타임리프 특징
+ 1. 서버 사이드 HTML 렌더링 (SSR)
+  - 백엔드 서버에서 HTML을 동적으로 렌더링하는 용도로 사용
+ 2. 내츄럴 템플릿
+  - 순수 HTML을 최대한 유지하는 특징이 있음
+  - 웹 브라우저에서 파일을 직접 열면 정적인 내용 확인 가능
+  - 서버를 통해 뷰 템플릿을 거치면 동적으로 변경된 결과 확인 가능
+  -> 순수 HTML을 그대로 유지하면서 뷰 템플릿도 사용 가능 -> 내츄럴 템플릿
+ 3. 스프링 통합 지원
+  - 스프링의 다양한 기능 사용 가능
+
+타임리프 사용 선언
+<html xmlns:th="http://www.thymeleaf.org">
+
+텍스트
+ 1) text
+  - <span th:text="${data}"></span>
+  - [[${data}]]
+ 2) utext (unescape)
+  - <span th:utext="${data}"></span>
+  - [(${data})]
+
+리터럴
+ - 소스 코드상에 고정된 값
+ - 리터럴 대체 문법 ' || ' 굿 !!!
+ 1) 문자 리터럴
+  - 항상 ''로 감싸야 한다.
+  - 같은 결의 문자가 공백없이 쭉 이어진다면 '' 생략 가능
+ 2) 숫자 리터럴
+ 3) 불린 리터럴
+ 4) null 리터럴 
+
+비교 연산, 조건식, Elvis 연산자, No-Operation(_)
+
+속성 설정
+ - th:* 속성을 지정하면 기존 속성을 대체한다.
+
+반복
+ - th:each
+
+주석
+ - 표준 HTML 주석        <!-- -->
+ - 타임리프 파서 주석     <!--/* */-->    (아예 사라짐)
+
+블락
+ - th:block
+ - 타임리프 자체의 기능
+ - 여러 태그를 묶을 때 사용 
+
+자바스크립트 인라인
+ - 자바스크립트에서 타임리프를 편리하게 사용할 수 있는 기능
+ - <script th:inline="javascript">
+ - 텍스트 렌더링
+   var username = [[${user.username}]];
+    - 인라인 사용 전  var username = userA;
+    - 인라인 사용 후  var username = "userA";
+ - 자바스크립트 내추럴 템플릿
+ - 객체
+   var user = [[${user}]];
+    - 인라인 사용 전  var user = BasicController.User(username=userA, age=10);
+    - 인라인 사용 후  var user = {"username":"userA", "age":10};
+    - 사용 전은 객체의 toString() 호출, 사용 후는 객체를 JSON으로 변환
+ - 인라인 each (반복문)
+
+
+템플릿 조각
+ - 웹 페이지를 개발할 때 공통 영역이 많음(상단 영역, 하단 영역, 좌측 카테고리 등)
+   -> 여러 페이지에서 함께 사용 -> 타임리프의 템플릿 조각, 레이아웃 기능 활용
+ - th:fragment
+ - template/fragment/footer :: copy
+   ->template/fragment/footer.html 안에 있는 th:fragment="copy"라는 부분을 템플릿 조각으로 가져와서 사용   
+ - th:insert : 현재 태그(div) 내부에 추가
+ - th:replate : 현재 태그(div)를 대체
+ - 파라미터 사용
+   <div th:replace="~{template/fragment/footer :: copyParam ('데이터1', '데이터2')}"></div>
+
+템플릿 레이아웃
+ - 이전에는 일부 코드 조각을 가지고 와서 사용
+   -> 이번엔 코드 조각을 레이아웃에 넘겨서 사용
+ - 공통으로 사용하는 정보들 -> 각 페이지마다 추가or변경하고 싶은 부분을 코드 조각으로 불러옴
+ - 공통 부분 유지, 추가한 부분 변경
+ - 레이아웃 존재 -> 그 레이아웃에 필요한 코드 조각 전달 -> 완성
+
+템플릿 레이아웃2
+ - 앞의 개념을 <head>에만 적용하는 게 아니라, <html> 전체에 적용함
+ - 페이지가 많아질 때 사용하면 좋음
+
+입력 폼 처리
+ - th:object : 커맨드 객체 지정
+ - *{..} : 선택 변수 식, th:object에서 선택한 객체에 접근
+ - th:field : HTML 태그의 id, name, value 속성을 자동 처리
+
+체크 박스
+ - 체크박스를 해제했을 때 문제점이 발생함
+   -> 히든 필드를 추가해줌 (_open)
+   -> 체크박스 체크 : open=true
+      체크박스 해제 : _open=on -> open=false
+ - 멀티 체크박스
+  - 체크박스에 담을 데이터들을 Map에 담아준다.
+  - @ModelAttribute 기능
+     : 이 컨트롤러에 있는 메서드들이 호출될 때마다 자동으로 호출되면서 model에 값이 담김.
+          
+메시지 
+ - 다양한 메시지를 한 곳에서 관리하도록 하는 기능
+ - 관리용 파일을 만들고, 각 HTML들이 해당 데이터를 key값으로 불러서 사용
+
+국제화
+ - 메시지 파일(messages.properties)을 각 나라별로 관리 -> 서비스를 국제화
+ - 영어 사용 -> messages_en.properties 사용
+ - 수학 사용 -> messages_ko.properties 사용 
+ - 어디서 접근한 것인지 인식하는 방법 -> HTTP accept-language 헤더 값 사용
+   또는, 사용자가 직접 언어를 선택하도록 하고 쿠키 등을 사용
+ - 타임리프 -> 스프링이 제공하는 메시지와 국제화 기능을 편리하게 통합해서 제공   
+
+
+ㅡㅡㅡㅡㅡㅡㅡㅡ
+검증
+ - 검증 오류가 발생하면 다시 해당 폼으로 돌아가서 재입력을 해야 함
+ - 폼 입력 시 오류가 발생하면, 고객이 입력한 데이터를 유지하면서 어떤 오류가 발생했는지 알려줘야 함
+ - Controller의 중요한 역할 : HTTP 요청이 정상인지 검증하는 것
+ - 클라이언트 검증 + 서버 검증을 적절히 섞어서 사용
+
+BindingResult : 검증 오류를 보관하는 객체(스프링이 제공)
+
+특정 필드에 오류가 있을 때 
+ -> FieldError 객체 생성 -> bindingResult에 담아둠
+필드를 넘어선 오류가 있을 때
+ -> ObjectError 객체 생성 -> bindingResult에 담아둠 
+
+파라미터 적을 때 @ModelAttribute 뒤에 BindingResult를 적어야 한다.
+ -> BindingResult에서 @ModelAttribute 객체의 결과를 Binding해주기 때문이다.
+    (BindingResult는 Model에 자동으로 포함된다.)
+
+#fields : BindingResult가 제공하는 검증 오류에 접근할 수 있다.
+th:errors : (th:if 편의 버전), 해당 필드에 오류가 있으면 태그 출력, 없으면 출력x
+th:errorclass : th:field에서 지정한 필드에 오류가 있으면 class 정보 추가
+
+FieldError 의 두 가지 생성자
+ - public FieldError(String objectName, String field, String defaultMessage);
+ - public FieldError(String objectName, String field, @Nullable Object rejectedValue, boolean bindingFailure,
+                     @Nullable String[] codes, @Nullable Object[] arguments, @Nullable String defaultMessage);
+ - objectName : 오류가 발생한 객체 이름
+ - field : 오류 필드
+ - rejectedValue : 사용자가 입력한 값(거절된 값), 오류 발생 시 사용자 입력 값을 저장하는 필드
+ - bindingFailure : 타입 오류 같은 바인딩이 실패했는지 여부
+ - codes : 메시지 코드(배열로 여러 값을 전달 가능, 순서대로 매칭되는 메시지 사용)
+ - arguments : 메시지에서 사용하는 인자('Object[]{100, 1000}'을 사용 -> {0}, {1}로 치환할 값 전달)
+ - defaultMessage : 기본 오류 메시지
+
+th:field="*{price}" : 정상 상황 -> 모델 객체 값 사용
+                      오류 상황 -> FieldError에서 보관한 값 사용
+
+void rejectValue(String field, String errorCode, Object[] errorArgs, String defaultMessage);
+ - field : 오류 필드명
+ - errorCode : 오류 코드(messageResolver를 위한 오류 코드)
+ - errorArgs : 오류 메시지에서 {0}을 치환하기 위한 값
+ - defaultMessage : 오류 메시지를 찾을 수 없을 때 사용하는 기본 메시지
+
+MessageCodesResolver
+ - 검증 오류 코드로 메시지 코드들 생성
+ - 인터페이스고, 주로 ObjectError, FieldError(생성자)와 함께 사용
+ - 구체적인 것을 먼저 만들어주고, 덜 구체적인 것을 나중에 만든다.
+ - 객체 오류 - 다음 순서로 2가지 생성
+    1. code + "." + object name
+    2. code
+    ex) 1. required.item
+        2. required
+
+ - 필드 오류 - 다음 순서로 4가지 생성
+    1. code + "." + object name + "." + field
+    2. code + "." + field
+    3. code + "." + field type
+    4. code
+    ex) 1. "typeA.user.age"
+        2. "typeA.age"
+        3. "typeA.int"
+        4. "typeA"
+
+Controller에서 하는 일이 너무 많다 !!
+ - 검증 로직
+ - 정상(성공) 로직
+  -> 둘을 분리해주자
+  -> 검증 로직 클래스 따로, 정상 로직 클래스 따로
+  -> 유지보수 간편 
+
+@Validated
+ - 검증기를 실행하라는 애노테이션
+ - WebDataBinder에 등록한 검증기를 찾아서 실행
+ - 어떤 검증기가 실행될지는 'supports()'로 구분해줌
+
+Bean Validation
+ - 검증 로직을 모든 프로젝트에 적용할 수 있게 공통화(표준화)한 것
+ - 애노테이션 하나로 검증 로직 간편화!!
+ - 구현체라기보단 인터페이스 느낌임(애노테이션 + 인터페이스 모음)
+ - build.gradle에 spring-boot-starter-validation 라이브러리를 넣으면
+   스프링이 자동으로 Bean Validator를 통합함
+ - 글로벌 Validator가 적용돼있어서 @Valid, @Validated만 적용하면 됨(검증)
+ - 에러 코드(@NotBlank, @Range, @Max ....)
+
+검증 순서
+ 1) @ModelAttribute 각각의 필드에 타입 변환 시도
+  - 성공하면 다음으로
+  - 실패하면 typeMismatch로 FieldError 추가
+ 2) Validator 적용
+
+ - 바인딩에 성공한 필드만 Bean Validation 적용
+ ex
+  1) itemName에 문자 "A" 입력 -> 타입 변환 성공 -> BeanValidation 적용
+  2) price에 문자 "A" 입력 -> 타입 변환 실패 -> typeMismatch, FieldError 추가 -> BeanValidation 적용 X
+
+Bean Validation 오브젝트 오류
+ - 특정 필드가 아닌, 오브젝트 오류 처리 => @ScriptAssert() 사용
+
+등록과 수정에 다른 BeanValidation을 적용하고 싶은데 둘이 동시에 적용된다.
+ -> 어떻게 해결할까 ?
+  1. groups 기능 사용
+  *2. Item을 직접 사용하지 않고, ItemSaveForm, ItemUpdateForm 등 폼 전송을 위한 별도의 모델 객체 사용
+
+HTTP 메시지 컨버터
+ API에서 3가지 경우
+  1) 성공 요청 : 성공
+  2) 실패 요청 : JSON을 객체로 생성하는 것 자체가 실패
+    - JSON 객체를 만들 때 오류값을 전송
+      -> API 컨트롤러를 호출하지도 못함
+      -> JSON 객체가 만들어져야 호출을 하는데, 그 단계까지도 못 가게 되는 것 
+      -> 컨트롤러 호출 X 
+  3) 검증 오류 요청 : JSON을 객체로 생성하는 것은 성공, 검증에서 실패
+     - API 컨트롤러 호출은 성공 (HttpMessageConverter 성공)
+     - 예외 발생 (Validation 오류)
+
+ @ModelAttribute
+  - 자동으로 model에 담김
+    -> model.addAttribute("xxx", xxx); ==>> 이걸 안 해줘도 됨
+  - HTTP 요청 파라미터를 처리, 필드 단위로 정교하게 바인딩이 적용됨
+  - 특정 필드가 바인딩되지 않아도, 나머지 필드는 정상 바인딩됨
+  - Validator를 사용한 검증도 적용 가능
+ @RequestBody
+  - HttpMessageConverter, JSON 데이터를 객체로 변경하지 못하면 이후 단계 자체를 진행하지 못하고 예외 발생 -> 예외 처리
+  - 컨트롤러 호출되지 않고, Validator도 적용 X  
+
+ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+로그인 처리(쿠키, 세션)
+
+domain / web
+ - domain : 시스템이 구현해야 하는 핵심 비즈니스 업무 영역
+ - 향후 web은 다른 기술로 바꿀 수 있더라도, domain은 유지해야 한다.
+ - web -> domain은 알고 있게 해도, domain -> web은 모르도록 설계해야 한다.
+ - web 패키지를 삭제해도 domain에는 영향이 안 끼쳐야 한다.
+ - domain은 web을 참조하면 안된다.
+
+로그인 상태 유지
+ - 서버에서 로그인에 성공 -> HTTP 응답에 쿠키를 담아서 브라우저에 전달
+   -> 앞으로 브라우저는 해당 쿠키를 지속해서 전달
+
+- 영속 쿠키 : 만료 날짜 입력 -> 해당 날짜까지 유지
+- 세션 쿠키 : 만료 날짜 생략 -> 브라우저 종료 시까지 유지   
+
+쿠키의 보안 문제점
+ - 쿠키 값은 임의로 변경 가능(클라이언트가 강제로)
+ - 쿠키에 보관된 정보는 훔쳐갈 수 있음
+
+대안
+ - 쿠키에 사용자별로 예측 불가능한 토큰 값 설정 -> 서버에서 매핑 후 토큰 관리
+ - 토큰의 만료시간을 짧게 유지 또는 해당 토큰 강제 제거  
+ -> 중요한 정보를 모두 서버에 저장해야 함
+ -> 클라이언트와 서버는 추정 불가능한 임의의 식별자 값으로 연결해야 함(세션) 
+
+세션 
+ - 클라이언트에서 로그인 정보 전달 -> 서버에서 사용자 확인
+  -> 추정 불가능한 세션 ID 생성(UUID)
+  -> 생성된 세션 ID, 보관할 값을 서버의 세션 저장소에 보관
+  -> 세션 ID를 응답 쿠키로 전달
+     - 클라이언트와 서버는 결국 쿠키로 연결되어야 함
+     - 서버는 클라이언트에 세션 ID만 쿠키에 담아서 전달
+     - 클라이언트는 쿠키 저장소에 쿠키 보관
+     - 중요한 정보는 클라이언트에 전달 X, 추정 불가능한 세션 ID만 쿠키로 전달
+  -> 요청 시 클라이언트가 서버로 세션 ID 쿠키 전달
+  -> 서버에서는 클라이언트가 전달한 쿠키 정보로 세션 저장소 조회
+  -> 로그인 시 보관한 세션 정보 사용 
+
+ - request.getSession(true)
+    : 세션이 있으면 반환, 없으면 신규 세션 생성
+ - request.getSession(false)
+    : 세션이 있으면 반환, 없으면 null 반환   
+
+ - 스프링이 지원하는 세션 애노테이션
+  - @SessionAttribute
+  - 이미 로그인된 사용자를 찾을 때 (이 기능은 세션을 생성하지 않음)
+   @SessionAttribute(name = "loginMember", required = false) Member loginMember
+ - HttpSession이 제공하는 타임아웃 기능을 사용 
+   -> 세션 타임아웃으로 설정한 시간 동안 세션을 추가로 사용 가능
+
+**
+@Controller
+ - View를 반환하기 위해 사용(by 뷰리졸버)
+@RestController
+ - @ResponseBody + @Controller
+ - Data를 반환하기 위해 사용
+ - Json 형태로 객체 데이터를 반환
+
+
+서블릿 필터
+ - 비로그인 사용자도 url을 통해 상품목록을 보고 관리할 수 있다 
+   -> 필터를 이용해 비로그인 사용자는 접근하지 못하도록 할 수 있음
+ - HTTP 요청 -> WAS -> 필터(이상한 요청 -> 서블릿호출 X) 
+   -> 서블릿 -> 컨트롤러
+ 1) 필터 제한
+  - 적절하지 않은 요청은 거기에서 끝을 냄(로그인 상황에 사용 적절)
+ 2) 필터 체인
+  - 중간에 필터를 자유롭게 추가 가능(로그 필터 ~ 로그인 필터 ~...)
+ 3) 필터 인터페이스
+  - 필터 인터페이스 구현 후 등록 -> 서블릿 컨테이너가 싱글톤 객체로 생성 후 관리 init(), doFilter(), destroy()    
+ - 화이트 리스트 : 비로그인 사용자도 접근할 수 있는 리소스
+ - 화이트 리스트 제외 나머지 경로 : 인증 체크 로직 적용
+
+인터셉터
+ - 필터와 인터셉터: 웹과 관련된 공통 관심사를 해결하기 위한 기술
+ - 서블릿의 필터보다는 스프링의 인터셉터를 더 많이 활용한다.
+ - 인증은 컨트롤러 호출 전에만 호출되면 된다. -> preHandle만 구현하면 된다.
+
+ - 스프링 인터셉터 흐름 (컨트롤러 호출 직전에 호출됨)
+ HTTP 요청 -> WAS -> 필터 -> 서블릿 -> 스프링 인터셉터 -> 컨트롤러
+ - 스프링 인터셉터 제한 (비로그인 사용자)
+ HTTP 요청 -> WAS -> 필터 -> 서블릿 -> 스프링 인터셉터(적절하지 않은 요청이라 판단, 컨트롤러 호출 X) 
+ - 호출된 컨트롤러 정보, modelAndView 응답 정보를 알 수 있음
+ 
+ - preHandle : 컨트롤러 호출 전
+ - postHandle : 컨트롤러 호출 후(예외 발생하면 호출 X)
+ - afterCompletion : 요청 완료 이후(뷰 렌더링 이후 호출)
+                     예외가 발생해도 호출됨(공통 처리를 위해)
+ 
+response.sendError(HTTP 상태 코드, 오류 메시지)
+ - HttpServletResponse가 제공하는 sendError 메서드
+ - 서블릿 컨테이너에 오류가 발생했다는 것을 전달
+ - 이 메서드를 호출하면 response 내부에 오류가 발생했다는 것을 저장해둠
+
+서블릿이 설정된 오류 페이지를 찾을 경우
+ - Exception(예외)이 발생해서 서블릿 밖으로 전달될 경우
+ - response.sendError()가 호출되었을 때
+
+오류 페이지 작동 원리(예외발생 -> 오류 페이지 요청 흐름)
+1. WAS(여기까지 전파) <- 필터 <- 서블릿 <- 인터셉터 <- 컨트롤러(예외 발생)
+2. WAS '/error-page/500' 다시 요청 -> 필터 -> 서블릿 -> 인터셉터 -> 컨트롤러(/error-page/500) -> View
+ - 예외가 발생해서 WAS까지 전파된다
+ - WAS는 오류 페이지 경로를 찾아서 내부에서 오류 페이지를 호출한다. 이때 오류
+   페이지 경로로 필터, 서블릿, 인터셉터, 컨트롤러가 모두 다시 호출된다.
+ - ★웹 브라우저(클라이언트)는 서버 내부에서 이런 일이 일어나는지 모름
+     오직 서버 내부에서 오류 페이지를 찾기 위해 호출한다.
+ - 필터나 인터셉터를 한 번 더 호출하는 것 -> 매우 비효율적
+   -> 클라이언트로부터 발생한 정상 요청인지,
+      오류 페이지를 출력하기 위한 내부 요청인지 구분해야 함
+      by DispatcherType
+
+DispatcherType
+ 1. REQUEST : 클라이언트 요청
+ 2. ERROR : 오류 요청
+ 3. FORWARD, INCLUDE, ASYNC 등...
+
+1. WAS(/error-ex, dispatchType=REQUEST) -> 필터 -> 서블릿 -> 인터셉터 -> 컨트롤러
+2. WAS(여기까지 전파) <- 필터 <- 서블릿 <- 인터셉터 <- 컨트롤러(예외발생)
+3. WAS 오류 페이지 확인
+4. WAS(/error-page/500, dispatchType=ERROR) -> 필터(x) -> 서블릿 -> 인터셉터(x) -> 컨트롤러(/error-page/500) -> View
+ - 필터 : DispatcherType 으로 중복 호출 제거(dispatcherType=REQUEST)
+ - 인터셉터 : 경로 정보로 중복 호출 제거(excludePathPatterns("/error-page/**"))
+
+ 스프링 부트 사용 -> 개발자는 '오류 페이지'만 등록하면 된다
+  - 오류 페이지로 /error 를 기본 요청함
+  - BasicErrorController는 기본적인 로직이 모두 개발돼있음
+  - 개발자는 이 로직에 맞게(룰, 우선순위) 오류 페이지 화면만 등록하면 됨
+  - 정적 HTML (정적 리소스) / 뷰 템플릿 (동적 화면)
+  
+BasicErrorController 우선순위
+ 1. 뷰 템플릿 (구체적인 것이 우선순위가 더 높음)
+  - resources/templates/error/500.html 
+  - resources/templates/error/5xx.html
+ 2. 정적 리소스(static, public)
+  - resources/static/error/400.html
+  - resources/static/error/404.html
+  - resources/static/error/4xx.html 
+ 3. 적용 대상 없을 때 뷰 이름(error)
+  - resources/templates/error.html
+
+
+API 예외 처리
+ - API 오류 처리 : @ExceptionHandler를 사용하자 !!
+ - 컨트롤러 밖으로 던져진 예외를 해결하고, 동작방식(상태코드 등)을 변경하고 싶으면 ExceptionResolver를 사용함 (예외를 해결 후 정상 흐름처럼 바꾸는 것이 목적)
+
+반환값에 따른 동작 방식
+ - 빈 ModelAndView : 뷰를 렌더링하지 않고, 정상 흐름으로 서블릿이 리턴
+ - ModelAndView 지정 : 뷰를 렌더링
+ - null
+
+ExceptionResolver
+ - 예외 상태 코드 변환
+   - 예외를 'response.sendError(xxx)' 호출로 변경해서 서블릿에서 상태 코드에 따른 오류를 처리하도록 위임
+   - 이후 WAS는 서블릿 오류 페이지를 찾아서 내부 호출(스프링 부트가 기본 설정한 /error 호출)
+ - 뷰 템플릿 처리
+   - ModelAndView 에 값을 채워서 예외에 따른 새로운 오류 화면 뷰를 렌더링해서 고객에게 제공
+ - API 응답 처리  
+
+
+** @RestController : @Controller + @ResponseBody
+  -> JSON 형태로 객체 데이터를 반환하는 것이 주목적이다.
+  -> @Controller는 View를 보여주는 것이 목적
+  -> @ResponseBody : View를 return하지 않고, Controller에서 직접 Data를 return할 수 있음
+
+생성자 인자 값 확인 단축키 : Ctrl + p
+
+** ResponseEntity
+  -> API를 반환할 때 상태코드, 상태 메시지 등등 데이터를 return해주는 용도의 클래스  
+  -> 개발자가 직접 결과 데이터와 HTTP 상태 코드를 직접 제어할 수 있는 클래스
+  -> 더불어 데이터도 함께 전송할 수 있음(좀 더 세밀한 작업에 필요!!)
+
+스프링이 제공하는 ExceptionResolver !!
+ 1. ExceptionHandler ★
+  - API 예외 처리는 대부분 ExceptionHandler 기능으로 해결한다
+ 2. ResponseStatus
+  - HTTP 상태 코드를 지정해준다
+  - @ResponseStatus(value = HttpStatus.NOT_FOUND) 애노테이션 적용 
+ 3. DefaultHandler
+  - 스프링 내부 기본 예외를 처리한다
+
+1. HTML 화면 오류
+ - 웹 브라우저에 HTML 화면을 제공할 때 오류 발생
+   -> BasicErrorController 사용(단순 5xx, 4xx 오류 화면 출력..)
+   
+2. API 오류
+ - API : 각 시스템마다 응답의 모양, 스펙 등 모두 다르다
+   -> 예외에 따라서 각각 다른 데이터를 출력해야 함
+   -> 컨트롤러에 따라서 다른 예외 응답을 내줘야 함(즉 세밀한 제어 필요)
+   -> 이것을 해주는 것이 바로 ExceptionHandler이다 !!
+ - @ExceptionHandler 예외 처리 방법
+   1) @ExceptionHandler 애노테이션 선언
+   2) 해당 컨트롤러에서 처리하고 싶은 예외 지정
+   3) 예외가 발생하면 해당 메서드 호출
+   4) 지정한 예외 + 예외의 자식 클래스는 모두 잡을 수 있음
+ - 우선 순위 : 자식 예외 > 부모 예외    
+ - 실행 흐름
+   1) 컨트롤러 호출 결과 -> 예외 'A'가 컨트롤러 밖으로 던져짐
+   2) 예외 발생 -> ExceptionResolver 작동 -> 우선순위가 가장 높은 ExceptionHandlerExceptionResolver 실행
+   3) 해당 컨트롤러에 예외 'A'를 처리할 수 있는 @ExceptionHandler가 있는지 확인함
+   4) 있으면 해당 메서드를 실행 -> @RestController이므로 해당 메서드에도 @ResponseBody가 적용 -> HTTP 컨버터 사용 -> 응답이 JSON으로 반환
+   5) @ResponseStatus(HTTP 상태 코드..)를 지정했다면, 해당 HTTP 상태 코드로 응답함
+   6) 결과
+     {
+       "code": "BAD",
+       "message": "잘못된 입력 값"
+     }
+ - 응답 객체로 ResponseEntity를 사용 -> HTTP 메시지 바디에 직접 응답
+   -> HTTP 컨버터 사용 -> ResponseEntity를 사용했으므로, HTTP 상태 코드를 프로그래밍해서 동적으로 변경할 수 있음    
+** @ResponseStatus : 애노테이션이므로 HTTP 상태 코드를 동적으로 변경 X
+** ResponseEntity : HTTP 상태 코드를 프로그래밍을 통해 동적으로 변경 O 
+
+@ControllerAdvice
+ - 문제점 : @ExceptionHandler만 사용하면 정상 코드와 예외 처리 코드가 하나의 컨트롤러에 섞여있어 지저분한 코드가 된다.
+ - 해결책 : @ControllerAdvice 또는 @RestControllerAdvice를 사용하여 둘을 분리하자
+ - 대상으로 지정한 컨트롤러들에 @ExceptionHandler, @InitBinder 기능 부여
+ - 대상으로 지정하지 않으면 모든 컨트롤러에 적용(글로벌 적용)
+ - 대상 컨트롤러 지정 방법
+   1) @ControllerAdvice(annotations = RestController.class)
+     - 특정 애노테이션이 있는 컨트롤러 지정
+   2) @ControllerAdvice("org.example.controllers")
+     - 특정 패키지 직접 지정
+   3) @ControllerAdvice(assignableTypes = {ControllerInterface.class}) 
+     - 특정 클래스 직접 지정
+ 
+ ==> @ExceptionHandler + @ControllerAdvice를 조합하면 예외를 깔끔하게 처리
+  @ExceptionHandler, @ControllerAdvice: 예외 처리 코드
+  컨트롤러 : 정상 코드
+
+
+스프링 타입 컨버터
+ - 애플리케이션 개발 -> 타입을 변환하는 상황 다수 발생
+ - 스프링 타입 변환 적용 예시
+   - 스프링 MVC 요청 파라미터
+     1) @RequestParam
+     2) @ModelAttribute
+     3) @PathVariable
+   - YML 정보 읽기, XML에 넣은 스프링 빈 정보 변환, 뷰 렌더링할 때
+ - 개발자가 스프링에 추가적인 타입 변환이 필요하면, 스프링이 제공하는 확장 가능한 컨버터 인터페이스를 이용해서 등록하면 된다.
+   -> public Interface Converter<S, T> { ~}
+
+ConversionService
+ - 스프링이 각각의 컨버터를 모아두고 묶어서 편하게 관리, 사용하는 기능
+ - DefaultConversionService
+   - ConversionService 인터페이스의 구현체이다.
+   - 추가적인 기능으로 ConversionService에 Converter들은 등록할 수 있고,
+    사용자는 이러한 내부 사정을 몰라도 되고, 단순히 ConversionService 인터페이스에만 의존해도 된다.
+    즉, 등록만 해놓으면 스프링이 자동으로 변환이 필요한 컨버터를 맞춰주고 타입을 변환해준다.
+ - ConversionService 사용
+   - Integer value = conversionService.convert("10", Integer.class);
+   
+* 인터페이스 분리 법칙(ISP, Interface Segregation Principal)
+ - 클라이언트는 자신이 이용하지 않는 메서드에 의존하지 않아야 한다.
+ - ConversionService를 예로 들면,
+   ConversionService 인터페이스 내부에는 Converter를 등록, 관리하는 구현체가 존재한다. 하지만 사용자는 이러한 메서드는 전혀 몰라도 되고, Converter를 사용하는 것만 알면 된다. 즉, ConverterService 인터페이스만 의존하면 된다.
+   -> 이렇게 인터페이스를 분리하는 것을 ISP라고 한다.
+
+스프링에 Converter 적용
+ - 스프링은 내부에서 ConversionService 제공
+ - WebMvcConfigurer가 제공하는 addFormatters() 사용
+   -> 추가하고 싶은 컨버터 등록
+   -> 스프링은 내부에서 사용하는 ConversionService에 컨버터를 추가해줌
+ - 스프링은 내부에 수많은 컨버터를 제공해준다
+   -> 개발자가 컨버터를 추가하면 추가한 컨버터가 우선순위로 동작한다
+
+* @RequestParam : 1:1로 매핑
+* @ModelAttribute : 객체를 매핑
+   - 파라미터로 넘겨준 타입의 오브젝트를 자동으로 생성
+   - HTTP Body 내용, HTTP 파라미터 값들을 Getter, Setter, 생성자를 통해 주입해줌, @ModelAttribute("파라미터명")
+   - 생성된 오브젝트 HTTP로 넘어온 값들을 자동으로 바인딩
+   - 애노테이션이 붙은 객체가 자동으로 Model 객체에 추가되어 View단으로 전달
+   * Model 객체 : Controller에서 생성된 데이터를 담아 View로 전달하는 객체
+
+뷰 템플릿에 컨버터 적용
+ - 이전까지는 문자 -> 객체로 타입 변환
+ - View는 문자를 출력해야 됨(객체 -> 문자로 타입 변환해야 함)
+* 타임리프
+ - 변수 표현식 : ${...}
+ - 컨버전 서비스 적용 : ${{...}}
+ - 타임리프의 th:field는 id , name을 출력하는 등 다양한 기능이 있는데, 여기에 컨버전 서비스도 함께 적용된다.
+ 
+Formatter(포맷터)
+ - 웹 애플리케이션에서 객체->문자 / 문자->객체로 변환
+ - 화면에 숫자를 출력해야 하는데, 
+ Integer -> String 출력 시점에 숫자 1000 -> 문자 "1,000" 이렇게 1000 단위에 쉼표를 넣어서 출력, 또는 문자 "1,000" -> 숫자 1000으로 변경
+ - Locale: 여기에 추가로 날짜 숫자의 표현 방법은 Locale 현지화 정보 사용O 
+ - 객체 -> 문자 (특정한 포맷에 맞추어) or 문자 -> 객체 출력
+ - 즉, 컨버터의 특별한 버전이 포맷터이다
+ - parse() : 문자 -> 숫자 변환
+ - print() : 객체 -> 문자 변환
+ Converter : 객체 <-> 객체 (범용)
+ Formatter : 객체 <-> 문자 (문자에 특화) + 현지화(Locale)
+
+포맷터를 지원하는 컨버전 서비스
+ - FormattingConversionService
+ - 컨버전 서비스에 포맷터 추가 가능
+
+스프링이 제공하는 기본 포맷터
+ - 애노테이션 기반으로 원하는 형식을 지정해서 사용할 수 있는 포맷터 두 가지 제공
+ 1) @NumberFormat : 숫자 관련 형식 지정 포맷터 사용
+ 2) @DateTimeFormat : 날짜 관련 형식 지정 포맷터 사용
+
+==>> 컨버터를 사용하든 포맷터를 사용하든 등록방법은 다르지만,
+     사용할 때는 컨버전 서비스를 통해서 일관성 있게 사용 가능!! 
+- 컨버전 서비스는 4가지 경우 등에서 사용할 수 있다.
+  1) @RequestParam
+  2) @ModelAttribute
+  3) @PathVariable
+  4) 뷰 템플릿
+
+
+ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+파일 업로드
+
+HTML 폼 전송 방식
+ 1) application/x-www-form-urlencoded
+  - HTML 폼 데이터를 서버로 전송하는 가장 기본적인 방법
+  - Form 태그에 별도의 enctype 옵션 X -> 웹 브라우저는 요청 HTTP 메시지의 헤더에 'Content-Type: application/x-www-form-urlencoded' 내용 추가
+  - 폼에 입력한 전송할 항목을 HTTP Body에 문자로 &로 구분해서 전송
+  - 파일을 전송하려면 문자가 아닌 바이너리 데이터를 전송해야 함
+ 2) multipart/form-data
+  - 보통 폼을 전송할 때 내용(문자)+첨부파일(바이너리)을 동시에 전송함
+  - 이 문제를 해결해주는 것이 'enctype=multipart/form-data' 이다.
+  - 다른 종류의 여러 파일 + 폼의 내용을 함께 전송 가능
+
+spring.servlet.multipart.enabled=true(기본값)
+ - 스프링부트가 서블릿 컨테이너에게 멀티파트 데이터를 처리하라고 설정해줌  
+ - 서블릿을 이용해 실제 파일을 서버에 업로드
+   - application.properties에 파일 경로 설정(file.dir), 실제 파일 생성
+      Part 주요 메서드
+        part.getSubmittedFileName() : 클라이언트가 전달한 파일명
+        part.getInputStream(): Part의 전송 데이터를 읽을 수 있다.
+        part.write(...): Part를 통해 전송된 데이터를 저장할 수 있다.
+
+스프링으로 파일 업로드
+ - 'Multipart' 인터페이스로 멀티파트 파일을 매우 편리하게 지원
+ - @RequestParam MultipartFile file 적용
+   - file.getOriginalFilename() : 업로드 파일명
+   - file.transferTo(...) : 파일 저장
+
+예제로 구현하는 파일 업로드, 다운로드
+ - 요구사항
+  1) 상품을 관리
+    - 상품 이름
+    - 첨부 파일 1개
+    - 이미지 파일 여러 개
+  2) 첨부파일을 업로드 및 다운로드할 수 있다.
+  3) 업로드한 이미지를 웹 브라우저에서 확인할 수 있다.              
